@@ -46,7 +46,14 @@ void loop() {
   // 시리얼 모니터
   printSerialData(distance, rgbValues, potValue);
 
-  delay(100); // 0.1초 대기
+  // 거리가 WARN_DIST 이하이면 경고음
+  if (distance > 0 && distance <= WARN_DIST) {
+    playBeep(250);              // 최대 볼륨으로 약 0.1초 소리
+  } 
+  else {
+    digitalWrite(BUZZER, LOW);  // 부저 끄기
+    delay(100);                 // 0.1초 대기
+  }
 }
 
 // 초음파 센서로 거리를 측정하여 cm로 반환
@@ -72,10 +79,21 @@ void calculateColor(int distance, int rgb[]) {
     rgb[2] = 0;                                  // Blue 끎
   }
   else {
-    // [76cm ~ 150cm] 초록 -> 청록 -> 은은한 파스텔 하늘/흰색
+    // [76cm ~ 150cm] 초록 -> 청록 -> 흰색
     rgb[0] = map(clampedDist, 75, 150, 0, 150);   // Red 부드럽게 증가
     rgb[1] = map(clampedDist, 75, 150, 255, 200); // Green 유지하며 약간 조정
     rgb[2] = map(clampedDist, 75, 150, 0, 255);   // Blue 증가
+  }
+}
+
+// 부저로 약 0.1초 동안 2000Hz 소리를 내는 함수 (tone() 대신 사용)
+// onTime: 한 주기(500µs) 중 부저를 켜두는 시간 (0 ~ 250, 클수록 큰 소리)
+void playBeep(int onTime) {
+  for (int i = 0; i < 200; i++) {      // 500µs × 200번 = 약 0.1초
+    digitalWrite(BUZZER, HIGH);
+    delayMicroseconds(onTime);         // 켜짐 시간
+    digitalWrite(BUZZER, LOW);
+    delayMicroseconds(500 - onTime);   // 나머지는 꺼짐 시간
   }
 }
 
