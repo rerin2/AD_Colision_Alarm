@@ -43,13 +43,16 @@ void loop() {
   // 가변저항 값 읽기 (0 ~ 1023)
   int potValue = analogRead(VOLUME_R);
 
-  // 시리얼 모니터
-  printSerialData(distance, rgbValues, potValue);
+  // 가변저항 값을 부저 켜짐 시간(볼륨)으로 변환: 0(무음) ~ 250(최대 볼륨)
+  int onTime = map(potValue, 0, 1023, 0, 250);
 
-  // 거리가 WARN_DIST 이하이면 경고음
-  if (distance > 0 && distance <= WARN_DIST) {
-    playBeep(250);              // 최대 볼륨으로 약 0.1초 소리
-  } 
+  // 시리얼 모니터
+  printSerialData(distance, rgbValues, onTime);
+
+  // 거리가 WARN_DIST 이하이고 볼륨이 0보다 크면 경고음
+  if (distance > 0 && distance <= WARN_DIST && onTime > 0) {
+    playBeep(onTime);           // 가변저항으로 정한 볼륨으로 약 0.1초 소리
+  }
   else {
     digitalWrite(BUZZER, LOW);  // 부저 끄기
     delay(100);                 // 0.1초 대기
@@ -97,8 +100,8 @@ void playBeep(int onTime) {
   }
 }
 
-// 시리얼 모니터에 거리, RGB 밝기 값, 가변저항 값을 출력하는 함수
-void printSerialData(int distance, int rgb[], int potValue) {
+// 시리얼 모니터에 거리, RGB 밝기 값, 볼륨 값을 출력하는 함수
+void printSerialData(int distance, int rgb[], int volume) {
   Serial.print("Distance: ");
   Serial.print(distance);
   Serial.print(" cm | R: ");
@@ -108,5 +111,5 @@ void printSerialData(int distance, int rgb[], int potValue) {
   Serial.print(" B: ");
   Serial.print(rgb[2]);   // Blue 값 출력
   Serial.print(" | Vol: ");
-  Serial.println(potValue); // 가변저항 값 출력 후 줄바꿈
+  Serial.println(volume); // 볼륨 값(0 ~ 250) 출력 후 줄바꿈
 }
